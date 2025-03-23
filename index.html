@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Міні-календар</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .calendar { width: 300px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .day { padding: 10px; border: 1px solid #ccc; cursor: pointer; }
+        .day.today { background: lightblue; }
+        .day.marked { background: yellow; }
+        .events { margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none; }
+    </style>
+</head>
+<body>
+    <div class="calendar">
+        <div class="header">
+            <button onclick="prevMonth()">&#9665;</button>
+            <h3 id="monthYear"></h3>
+            <button onclick="nextMonth()">&#9655;</button>
+        </div>
+        <div class="days" id="days"></div>
+    </div>
+    
+    <div class="events" id="eventBox">
+        <h3 id="eventTitle"></h3>
+        <ul id="eventList"></ul>
+        <input type="text" id="eventInput" placeholder="Додати подію">
+        <button onclick="addEvent()">Додати</button>
+    </div>
+
+    <script>
+        const monthNames = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
+        let currentDate = new Date();
+        let markedDays = {};
+        let events = {};
+        let selectedDate = "";
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            document.getElementById("monthYear").textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const daysContainer = document.getElementById("days");
+            daysContainer.innerHTML = "";
+            
+            for (let i = 0; i < firstDay; i++) {
+                daysContainer.innerHTML += '<div></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement("div");
+                dayElement.classList.add("day");
+                dayElement.textContent = day;
+                
+                if (year === new Date().getFullYear() && month === new Date().getMonth() && day === new Date().getDate()) {
+                    dayElement.classList.add("today");
+                }
+                
+                if (markedDays[`${year}-${month}-${day}`]) {
+                    dayElement.classList.add("marked");
+                }
+                
+                dayElement.onclick = () => openEvents(year, month, day);
+                
+                daysContainer.appendChild(dayElement);
+            }
+        }
+        
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+        
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function openEvents(year, month, day) {
+            selectedDate = `${year}-${month}-${day}`;
+            document.getElementById("eventTitle").textContent = `Події ${day} ${monthNames[month]} ${year}`;
+            document.getElementById("eventList").innerHTML = "";
+            
+            if (events[selectedDate]) {
+                events[selectedDate].forEach(event => {
+                    const li = document.createElement("li");
+                    li.textContent = event;
+                    document.getElementById("eventList").appendChild(li);
+                });
+            }
+            
+            document.getElementById("eventBox").style.display = "block";
+        }
+
+        function addEvent() {
+            const eventText = document.getElementById("eventInput").value;
+            if (!eventText) return;
+            
+            if (!events[selectedDate]) {
+                events[selectedDate] = [];
+            }
+            events[selectedDate].push(eventText);
+            
+            document.getElementById("eventInput").value = "";
+            openEvents(...selectedDate.split("-").map(Number));
+        }
+        
+        renderCalendar();
+    </script>
+</body>
+</html>
